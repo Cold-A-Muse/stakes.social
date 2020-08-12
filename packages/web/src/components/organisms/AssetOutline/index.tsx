@@ -5,6 +5,7 @@ import { useStakingShare } from 'src/fixtures/dev-kit/hooks'
 import { useGetPropertyAuthenticationQuery } from '@dev/graphql'
 import styled from 'styled-components'
 import Link from 'next/link'
+// import useFetch from 'src/hooks/useFetch'
 
 interface Props {
   className?: string
@@ -32,6 +33,27 @@ const AssetListItem = styled(List.Item)`
   font-size: 1.3rem;
 `
 
+const AuthorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  position: relative;
+`
+
+const KarmaBadge = styled.div`
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 9px;
+  box-shadow: 0 4px 3px -3px black;
+  border: 1px solid lightgray;
+`
+
+const Account = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`
+
 const AssetStrengthBase = ({ assetStrength }: { assetStrength: number }) => (
   <AssetStrengthWrap>
     <CircleGraph percentage={assetStrength} />
@@ -45,6 +67,24 @@ const AssetStrength = ({ property }: { property: string }) => {
   const { stakingShare: maybeAssetStrength } = useStakingShare(property)
   const assetStrength = useMemo(() => maybeAssetStrength || 0, [maybeAssetStrength])
   return <AssetStrengthBase assetStrength={assetStrength} />
+}
+
+const Author = ({ propertyAddress }: { propertyAddress: string }) => {
+  // const BASELINE_URL = 'https://api.devprtcl.com/v1/karma/'
+  // const fetchUrl = `${BASELINE_URL}${propertyAddress}`
+  // const { data, isLoading, hasError, errorMessage } = useFetch(fetchUrl)
+
+  return (
+    <AuthorContainer>
+      <div>Author</div>
+      <Account>
+        <h2>Daan</h2>
+        <KarmaBadge>26,401</KarmaBadge>
+      </Account>
+
+      <div>{propertyAddress}</div>
+    </AuthorContainer>
+  )
 }
 
 export const AssetOutline = ({ className, propertyAddress }: Props) => {
@@ -73,6 +113,7 @@ export const AssetOutline = ({ className, propertyAddress }: Props) => {
           </Button>
         </Link>
       </div>
+      <Author propertyAddress={propertyAddress} />
       <div>
         <p>Staking Ratio</p>
         <AssetStrength property={propertyAddress} />

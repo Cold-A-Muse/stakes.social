@@ -21,7 +21,7 @@ const StakersList = styled.ol`
   li {
     color: black;
     border-bottom: 1px solid lightgrey;
-    padding: 12px 18px;
+    padding: 8px 14px;
 
     &:last-child {
       border-bottom: 0;
@@ -41,6 +41,19 @@ const PlaceHolderList = styled.div<{ noData?: boolean }>`
 const Flex = styled.div`
   display: flex;
   flex-direction: column;
+`
+
+const Address = styled(Flex)`
+  padding: 5px;
+  text-overflow: ellipsis;
+`
+
+const Rank = styled.span`
+  padding: 5px;
+`
+
+const Value = styled.div`
+  padding: 5px;
 `
 
 const TopStakers = ({ propertyAdress }: TopStakersProps) => {
@@ -72,15 +85,15 @@ const TopStakers = ({ propertyAdress }: TopStakersProps) => {
         {stakerItems?.map(({ account_address, value }, index) => (
           <li key={`${account_address}-${value}`}>
             <ListItem>
-              <div>{index + 1}</div>
-              <Flex>
+              <Rank>{index + 1}</Rank>
+              <Address>
                 <h3>Account address</h3>
                 <span> {`${account_address}`}</span>
-              </Flex>
-              <Flex>
+              </Address>
+              <Value>
                 <h3>Value</h3>
                 <span>{`${(value / Math.pow(10, 18)).toFixed(2)}`}</span>
-              </Flex>
+              </Value>
             </ListItem>
           </li>
         ))}
