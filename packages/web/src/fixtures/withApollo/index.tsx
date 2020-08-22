@@ -1,46 +1,41 @@
-/* eslint-disable react/display-name */
-import React from 'react'
-import withApollo from 'next-with-apollo'
-import { NextPageContext } from 'next'
-import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory'
-import { ApolloLink } from 'apollo-link'
-import { ApolloClient } from 'apollo-client'
-import { createHttpLink } from 'apollo-link-http'
-import { onError, ErrorHandler } from 'apollo-link-error'
-import { ApolloProvider } from 'react-apollo'
+import { useMemo } from 'react'
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
+import { isBrowser } from '../utility'
 
-export const errorHandler = (_?: NextPageContext): ErrorHandler => ({ graphQLErrors }) => {
-  if (graphQLErrors) {
-    graphQLErrors.some(({ extensions }) => {
-      console.error(extensions)
-    })
-  }
+let apolloClient: any
+
+function createApolloClient() {
+  return new ApolloClient({
+    connectToDevTools: isBrowser(),
+    ssrMode: typeof window === 'undefined',
+    link: new HttpLink({
+      uri: 'https://api.devprtcl.com/v1/graphql' // Server URL (must be absolute)
+    }),
+    cache: new InMemoryCache()
+  })
 }
 
-const isBrowser = typeof window !== 'undefined'
+export function initializeApollo(initialState: any = null) {
+  const _apolloClient = apolloClient ?? createApolloClient()
 
-export default withApollo<NormalizedCacheObject>(
-  ({ ctx, headers }) => {
-    const withHttp = createHttpLink({
-      uri: 'https://api.devprtcl.com/v1/graphql', // Server URL (must be absolute),
-      ...(!isBrowser && { fetch }),
-      headers
-    })
-
-    return new ApolloClient({
-      connectToDevTools: isBrowser,
-      ssrMode: false,
-      link: ApolloLink.from([onError(errorHandler(ctx)), withHttp]),
-      cache: new InMemoryCache()
-    })
-  },
-  {
-    render: ({ Page, props }) => {
-      return (
-        <ApolloProvider client={props.apollo}>
-          <Page {...props} />
-        </ApolloProvider>
-      )
-    }
+  // If your page has Next.js data fetching methods that use Apollo Client, the initial state
+  // gets hydrated here
+  if (initialState) {
+    // Get existing cache, loaded during client side data fetching
+    const existingCache = _apolloClient.extract()
+    // Restore the cache using the data passed from getStaticProps/getServerSideProps
+    // combined with the existing cached data
+    _apolloClient.cache.restore({ ...existingCache, ...initialState })
   }
-)
+  // For SSG and SSR always create a new Apollo Client
+  if (typeof window === 'undefined') return _apolloClient
+  // Create the Apollo Client once in the client
+  if (!apolloClient) apolloClient = _apolloClient
+
+  return _apolloClient
+}
+
+export function useApollo(initialState: any) {
+  const store = useMemo(() => initializeApollo(initialState), [initialState])
+  return store
+}
